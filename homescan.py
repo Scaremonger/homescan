@@ -190,7 +190,9 @@ def mqtt_on_message( client, userdata, msg ):
         #if VERBOSE: print( "** Something went wrong!" )
         if VERBOSE: log.debug( str(e) )
         if VERBOSE: traceback.print_exc(file=sys.stdout)
-        logging.exception(e)
+        log.error("on_message error", exc_info=True)
+        log.exception(e)
+        log.emit()
         
 def mqtt_publish_device( device ):
     data = { "mac":device['mac'], "ip":device['ip'], "hostname":device['hostname'], "state":device['state'], "rtt":device['rtt'] }
@@ -294,7 +296,9 @@ class HomeScan():
                 if VERBOSE: log.debug( "Waiting for "+str(SCAN_DELAY)+" seconds" )
                 time.sleep( SCAN_DELAY )
         except Exception as e:
-            logging.exception(e)
+            log.error("Scan failure", exc_info=True)
+            log.exception(e)
+            log.emit()
             Running = False
         except KeyboardInterrupt:
             print( "User aborted" )
@@ -345,7 +349,9 @@ if __name__ == "__main__":
         if VERBOSE: log.debug( "* Failed to connect to MQTT" )
         if VERBOSE: log.debug( "* Broker: "+settings.broker+":"+str(settings.port) )
         if VERBOSE: log.debug( str(e) )
-        logging.exception(e)
+        log.error("Fatal error while connect", exc_info=True)
+        log.exception(e)
+        log.emit()
         if settings.username=='':
             if VERBOSE: log.debug( "* Auth: Anonymous" )
         else:
@@ -359,7 +365,9 @@ if __name__ == "__main__":
         main.run()
     except Exception as e:
         #traceback.print_exc(file=sys.stdout)
-        logging.exception(e)
+        log.error("Fatal error while listen", exc_info=True)
+        log.exception(e)
+        log.emit()
         #client.publish( settings.state, json.dumps( {"state":"Failed"}, default=str ), qos=0, retain=True )
         #mqtt_publish_state( "Failed" )
         mqtt.loop_stop()

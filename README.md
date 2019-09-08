@@ -2,6 +2,9 @@
 An ARP Presence detection system for the Home that publishes on MQTT.
 By default, it will attempt to connect to an open MQTT broker on the local system; this can be changed by editing the configuration file.
 
+Join us on the Homescan channel on Discord at:
+https://discord.gg/FhcKbr4
+
 Homescan publishes the following information to MQTT:
 * Hoemscan application state (UP/DOWN)
 * ARRIVE, DELETE, ONLINE, OFFLINE and CHANGE events
