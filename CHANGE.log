@@ -1,0 +1,66 @@
+HOMESCAN CHANGE LOG
+
+8 SEP 2019, VER: 1.0.1
+* Bug fixes
+* PUBLISHED TO GITHUB
+
+4 SEP 2019, VER: 1.0.0
+* Added Round Trip Time calculation and results into MQTT
+* Added localAddress() and localMask() 
+    ** I do not know if these are Windows compatible at the moment **
+* Added Mask2CIDR() to shared.py
+* Added "verbose=1|0" to settings to turn off Verbose log debugging
+* Changed subnet calculation to use localAddress() / localMask() by default
+* Changed settings to default subnet and mask to empty string
+    This will force it to be read from the system
+* Allowed "reaper=0" to turn of device deletions.
+* Removed all PRINT() statements using during debugging
+* Decimal-Aligned RTT results in homescan-devices.py
+* Bug fixes
+
+2 SEP 2019, VER: 0.0.7
+* Re-worked device timeout and reaper to use counters instead of time
+* Introduced logging instead of debug to screen
+* removed mac_expire() and mac_delete(), added code inline instead
+* Several bug fixes
+
+1 SEP 2019, VER: 0.0.6
+* It is now "state" not "status" (Standardised it everywhere)!
+* renamed homescan-status.py to homescan.state.py
+* Updated on_message to put state in "prestate"
+* updated mqtt_publish_device() to only publish mac, ip, hostname and state
+
+31 AUG 2019, VER: 0.0.5
+* Aadded row() to shared.py
+* homescan-events.py: Output in columns instead of JSON
+* homescan-status.py: Output in columns instead of JSON
+* settings.py, Applied fixups to topics to remove trailing "/"
+* Created homescan-devices.py
+* Fixed message decode issue
+* Fixed device topic retain issue
+
+31 AUG 2019, VER: 0.0.4
+* Created github repository
+* Replaced constants (Used during build) with config settings
+* Aadded row() to shared.py
+* Created homescan-events.py
+* Created homescan-status.py
+
+30 AUG 2019, VER: 0.0.3
+* Create settings.py and shared.py libraries
+
+25 AUG 2019, VER: 0.0.2
+* Added Application state via Last Will and Testament (UP/DOWN)
+* Added created, updated and status to device records
+* Added ",default=str" to json.dumps() in mqtt_publish_device
+* Changed device Expiration to ONLINE/OFFLINE events
+* Re-worked ARRIVE/EXPIRE/UPDATE and added DELETE for zombies
+                        
+24 AUG 2019, VER: 0.0.1 
+* Creation of module
+* Added ARP Sniffer (More reliable that srp() replies)
+* Updated srp() to srp1() as we don't need every reply
+* Added hostname resolution
+* Added "devices" list plus address arrival/change detection
+* Added device expiration detection
+* Added MQTT publication of events
