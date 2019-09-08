@@ -16,10 +16,22 @@ Application publishes:
 * TBC
 
 # Installation
-TO BE CONFIRMED / TESTED
 
-cd /opt
-sudo git clone https://github.com/Scaremonger/homescan
+First, create a virtual environemnt:
+
+    sudo apt-get install python3-venv
+    sudo python3 -m venv /opt/venv
+
+Install Homescan:
+
+    cd /opt
+    sudo git clone https://github.com/Scaremonger/homescan
+
+    
+Test installation:
+
+    cd /opt/homescan
+    sudo /opt/venv/bin/python3 homescan-state.py
 
 Notes:
 * Python3

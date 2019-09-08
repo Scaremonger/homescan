@@ -1,8 +1,12 @@
 HOMESCAN CHANGE LOG
 
+8 SEP 2019, VER: 1.0.2
+* Updated installation instructions in README
+* Fixed bug in settings.py
+
 8 SEP 2019, VER: 1.0.1
 * Bug fixes
-* PUBLISHED TO GITHUB
+* INITIAL PUBLISHED TO GITHUB
 
 4 SEP 2019, VER: 1.0.0
 * Added Round Trip Time calculation and results into MQTT

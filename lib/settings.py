@@ -8,9 +8,13 @@ import configparser as configParser
 import json
 import sys
 import os
+import logging
 
 APPNAME="homescan"
 COMPANY="Scaremonger"
+
+# LOGGING
+log = logging.getLogger( APPNAME )
 
 ## This was improved after reviewing ActiveState/appdirs
 ## Thanks for assistance with "java"...
