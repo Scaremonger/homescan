@@ -1,5 +1,9 @@
 HOMESCAN CHANGE LOG
 
+8 SEP 2019, VER: 1.0.3
+* Updated installation instructions in README
+* Added bin/homescan.service as template
+
 8 SEP 2019, VER: 1.0.2
 * Updated installation instructions in README
 * Fixed bug in settings.py

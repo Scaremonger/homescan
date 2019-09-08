@@ -1,0 +1,15 @@
+[Unit]
+Description=Homescan
+After=multi-user.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/homescan
+ExecStart=/opt/venv/bin/python3 homescan.py
+Restart=on-abort
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=Homescan
+
+[Install]
+WantedBy=multi-user.target

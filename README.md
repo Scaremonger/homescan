@@ -1,53 +1,75 @@
 # Homescan
 An ARP Presence detection system for the Home that publishes on MQTT.
+By default, it will attempt to connect to an open MQTT broker on the local system; this can be changed by editing the configuration file.
 
-Application publishes:
-* Application state UP/DOWN
+Homescan publishes the following information to MQTT:
+* Hoemscan application state (UP/DOWN)
 * ARRIVE, DELETE, ONLINE, OFFLINE and CHANGE events
 * Device MAC/IP/Hostname/STATE and Round Trip Time
 
 # Project State
-4 SEP 2019, Version 1.0.0, BETA
-- Tested on Linux Mint Mint 19.1
-- Untested on Windows and Linux
+BETA RELEASE
+Platforms supported:
+* Linux Mint Mint 19.1
 
+Platforms untested:
+* Raspabian
+* Ubuntu
+* Windows
 
 # Dependencies:
-* TBC
+* Paho MQTT
 
 # Installation
-
-First, create a virtual environemnt:
+This installation creates a virtual environment and adds dependedncies:
 
     sudo apt-get install python3-venv
     sudo python3 -m venv /opt/venv
-
-Install Homescan:
-
+    sudo /opt/venv/bin/python3 -m pip install paho-mqtt
+    sudo /opt/venv/bin/python3 -m pip install scapy
+    
     cd /opt
     sudo git clone https://github.com/Scaremonger/homescan
 
-    
 Test installation:
 
     cd /opt/homescan
     sudo /opt/venv/bin/python3 homescan-state.py
 
-Notes:
-* Python3
-* configparser
+    (Press Ctrl-C to abort if required)
+Homescan will attempt to connect to MQTT on the local system by default, but you should now configure the following options if required:
+    
+    broker
+        This defaults to 127.0.0.1 and will need to be changed if you have
+        it installed on another system
+    port
+        This is the default MQTT port of 1883
+    username / password
+        You need to set your username and password if you have added security to MQTT broker
+    interface
+        If your system interface is not called "eth0" your will need to change this.
+        Please check the output of "ifconfig" for your system details.
 
-Set up default configuration and test:
+TIP:
+Open another terminal session for each of the tools provided with homescan:
 
     cd /opt/homescan
-    sudo python3 homescan.py
+    sudo homescan-state.py
+    
+    cd /opt/homescan
+    sudo homescan-devices.py
+
+    cd /opt/homescan
+    sudo homescan-events.py
+
+Run as a service
+
+    sudo cp /opt/homescan/bin/homescan.service /etc/systemd/system/
+    sudo chmod u+rwx /etc/systemd/system/homescan.service
+    sudo systemctl enable homescan
+    sudo systemctl start homescan
 
 # Configuration
-Run the homescan status test and make a note of the location of your configuration file:
-
-    cd /opt/homescan
-    sudo python3 homescan.py
-
 Edit your configuration file:
 
     sudo nano /etc/homescan/homescan.ini
@@ -106,9 +128,13 @@ mask=
     The subnet mask of your network
     Default: 255.255.255.0
     
-# Run as a service
-TODO
+# Updating to latest version
 
+    sudo service homescan stop
+    cd /opt/homescan
+    sudo git pull
+    sudo service homescan start
+    
 # Tools
 
 ## homescan_events.py
@@ -120,8 +146,10 @@ This script can be used to view all devices published to the homescan/devices to
 ## homescan_status.py
 This script can be used to display the state of the homescan application as reported on MQTT topic homescan/homescan_status
 
-# Known Bugs
-- Script should identify the correct IP/MASK/INTERFACE as default
-- interface, subnet and mask should really be in [network] section
-- script status is not retained!
+# Errors:
+OSError: [Errno 19] No such device
+
+Check that "interface=" is set to the correct interface for your system. 
+Run "ifconfig" (linux) or "ipconfig" (windows) to check the interfaces on your system.
+Update configuration file
 
