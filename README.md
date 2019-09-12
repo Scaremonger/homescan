@@ -6,7 +6,7 @@ Join us on the Homescan channel on Discord at:
 https://discord.gg/FhcKbr4
 
 Homescan publishes the following information to MQTT:
-* Hoemscan application state (UP/DOWN)
+* Homescan application state (UP/DOWN)
 * ARRIVE, DELETE, ONLINE, OFFLINE and CHANGE events
 * Device MAC/IP/Hostname/STATE and Round Trip Time
 
@@ -24,7 +24,7 @@ Platforms untested:
 * Paho MQTT
 
 # Installation
-This installation creates a virtual environment and adds dependedncies:
+This installation creates a virtual environment and adds dependencies:
 
     sudo apt-get install python3-venv
     sudo python3 -m venv /opt/venv
