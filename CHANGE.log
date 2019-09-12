@@ -1,5 +1,17 @@
 HOMESCAN CHANGE LOG
 
+13 SEP 2019, VER 1.0.6
+* Fixed stupid typo in debugging statement
+* Added file containing version number in filename to folder
+* Added version number into application status
+* Application status is now Retained
+* Added Date/Time on events
+* homescan-state.py:
+    Removed column "retain" as it's not really relevant, replaced with "*"
+    Added columns datetime and version
+    Added some error checking for fields in received messages
+* Updated README.md
+
 12 SEP 2019, VER: 1.0.5
 * Added function show() to perform all debugging.
 * Disabled "Loaded" event as it's pretty useless.

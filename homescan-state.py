@@ -1,17 +1,18 @@
 ## HOMESCAN TOOLS: event viewer
 ## (c) Copyright Si Dunford, Aug 2019
-## Version 1.0.0
+## Version 1.0.6
 
 # Imports
 import os,sys
 import socket 
 import paho.mqtt.client as pahomqtt
 import json
+from datetime import datetime
 from lib.settings import settings
 from lib.shared import *
 
 # Columns to display in debug results
-COLUMNS={ "state":7, "retain":6 }
+COLUMNS={ "datetime":20, "state":8, "version":10 }
 
 # MQTT connection
 def mqtt_on_connect( client, userdata, flags, rc ):
@@ -34,13 +35,11 @@ def mqtt_on_message( client, userdata, msg ):
         #print( "tbc" )
         #print( "DATA:    "+json.loads( msg.payload ))    
         message = json.loads( decoded )
+        if not "state" in message: message['state']='Unknown'
+        if not "version" in message: message['version']=''
+        if not "datetime" in message: message['datetime']=""
         if msg.retain==1:
-            message['retain']="True"
-            #print( "* Retained:" )
-        else:
-            message['retain']="False"
-            #print( "* Not retained")
-        #print( str(msg.payload) )
+            message['state']=message['state']+"*"
         print( row( message, COLUMNS ) )
     except Exception as e:
         print( "** Something went wrong!" )
@@ -73,8 +72,8 @@ if __name__ == "__main__":
     mqtt.on_message = mqtt_on_message
    
     # Print table heading
-    print( row( {"state":"STATE", "retain":"RETAIN" }, COLUMNS ))
-    print( row( {"event":"", "retain":"" }, COLUMNS, "-" ))
+    print( row( {"datetime":"RECEIVED", "state":"STATE", "version":"VERSION" }, COLUMNS ))
+    print( row( {"datetime":"", "state":"", "version":"" }, COLUMNS, "-" ))
  
     # Connect to MQTT
     try:

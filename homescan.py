@@ -1,15 +1,16 @@
 ## HOMESCAN: Network ARP Scan and Sniff
 ## (c) Copyright Si Dunford, Aug 2019
-## Version 1.0.5
+VER='1.0.6'
 
 # Imports
 from scapy.all import *
 import socket, fcntl
 import struct, traceback
-import time, datetime
+import time
 import paho.mqtt.client as pahomqtt
 import json
 import logging
+from datetime import datetime
 from lib.settings import settings
 from lib.shared import *
 
@@ -206,7 +207,8 @@ def mqtt_on_message( client, userdata, msg ):
         #log.exception(e)
         #log.emit()
     #show( "--> on_message" )    
-     
+
+# Publish a device status
 def mqtt_publish_device( device ):
     #show( "mqtt_publish_device()" )
     data = { "mac":device['mac'], "ip":device['ip'], "hostname":device['hostname'], "state":device['state'], "rtt":device['rtt'] }
@@ -214,19 +216,27 @@ def mqtt_publish_device( device ):
     mqtt.publish( settings.topic+"/"+device['mac'], msg, qos=0, retain=True )
     #show( "--> mqtt_publish_device" )    
 
+# Publish an event
+# Added datetime in V1.0.6
 def mqtt_publish_event( event, mac, ip, hostname, info='' ):
     show( "mqtt_publish_event()" )
-    message = { "event":event, "mac":mac, "ip":ip, "hostname":hostname, "info":info }
+    now = datetime.now()
+    when = now.strftime("%Y%m%d, %H:%M:%S")
+    message = { "datetime":when, "event":event, "mac":mac, "ip":ip, "hostname":hostname, "info":info }
     msg = json.dumps( message, default=str )
     mqtt.publish( settings.events, msg, qos=0 )
     show( "-->mqtt_publish_event()" )
 
+# Publish application state
+# Datetime and Version added in V1.0.6
 def mqtt_publish_state( state ):
     show( "mqtt_publish_state()" )
     #client.publish( settings.state, json.dumps( {"state":settings.online}, default=str ), qos=0, retain=True )
-    message = { "state":state }
+    now = datetime.now()
+    when = now.strftime("%Y%m%d, %H:%M:%S")
+    message = { "datetime":when, "state":state, "version":VER }
     msg = json.dumps( message, default=str )
-    mqtt.publish( settings.state, msg, qos=0 )
+    mqtt.publish( settings.state, msg, qos=0, retain=True )
     show( "-->mqtt_publish_state()" )
     
 class HomeScan():
@@ -286,7 +296,7 @@ class HomeScan():
                 for mac in list(devices.keys()):
                     #age = now - devices[mac]['last']
                     #print( mac, devices[mac]["hostname"], devices[mac]['state'], devices[mac]['counter'] ) 
-                    show( mac+", "+devices[mac]["hostname"]+", "+devices[mac]['state']+", "+devices[mac]['counter'] )
+                    show( mac+", "+devices[mac]["hostname"]+", "+devices[mac]['state']+", "+str(devices[mac]['counter']) )
                     # Do we REAP?
                     if settings.reaper>0 and devices[mac]['counter']>settings.reaper:
                         show( "Reaping..." )
@@ -383,7 +393,8 @@ if __name__ == "__main__":
     
     # Set Last Will and Testament
     show( "* Setting LWT" )
-    lwt = json.dumps( {"state":settings.offline}, default=str )
+    message = { "datetime":"", "state":settings.offline, "version":VER }
+    lwt = json.dumps( message, default=str )
     mqtt.will_set( settings.state, lwt, qos=1, retain=True )
     
     # Connect to MQTT

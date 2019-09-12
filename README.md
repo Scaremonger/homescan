@@ -22,6 +22,7 @@ Platforms untested:
 
 # Dependencies:
 * Paho MQTT
+* Scapy
 
 # Installation
 This installation creates a virtual environment and adds dependencies:
@@ -135,7 +136,7 @@ mask=
 
     sudo service homescan stop
     cd /opt/homescan
-    sudo git pull
+    sudo git fetch
     sudo service homescan start
     
 # Tools
