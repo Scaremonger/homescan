@@ -1,6 +1,11 @@
 HOMESCAN CHANGE LOG
 
-13 SEP 2019, VER 1.0.6
+13 SEP 2019: 1.0.7
+* Updated README.md
+* Fixed timeout count to >= instead of >
+* Fixed bug in "CHANGE" event handler
+
+12 SEP 2019, VER: 1.0.6
 * Fixed stupid typo in debugging statement
 * Added file containing version number in filename to folder
 * Added version number into application status

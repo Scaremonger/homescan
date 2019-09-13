@@ -1,6 +1,6 @@
 ## HOMESCAN: Network ARP Scan and Sniff
 ## (c) Copyright Si Dunford, Aug 2019
-VER='1.0.6'
+VER='1.0.7'
 
 # Imports
 from scapy.all import *
@@ -132,7 +132,7 @@ def mac_found( mac, ip, hostname, rtt ):
             # Update device
             device["hostname"]=hostname
             # Update MQTT
-            mqtt_publish_device( devices )
+            mqtt_publish_device( device )
     else:
         # MAC address is not previously known
         device = {"mac":mac, "ip":ip, "hostname":hostname, "state":"up", "counter":0, "rtt":rtt }
@@ -298,7 +298,7 @@ class HomeScan():
                     #print( mac, devices[mac]["hostname"], devices[mac]['state'], devices[mac]['counter'] ) 
                     show( mac+", "+devices[mac]["hostname"]+", "+devices[mac]['state']+", "+str(devices[mac]['counter']) )
                     # Do we REAP?
-                    if settings.reaper>0 and devices[mac]['counter']>settings.reaper:
+                    if settings.reaper>0 and devices[mac]['counter']>=settings.reaper:
                         show( "Reaping..." )
                         # Publish DELETE event
                         mqtt_publish_event( "DELETE", mac, ip, hostname )
@@ -307,7 +307,7 @@ class HomeScan():
                         # Remove from device list
                         devices.pop( mac )
                     # Do we timeout?
-                    elif devices[mac]['counter']>settings.timeout:
+                    elif devices[mac]['counter']>=settings.timeout:
                         #if "timeout" in devices[mac]: show( "No timeout key", MSG_ERROR )
                         show( "Timeout..." )
                         #print( mac + " down")

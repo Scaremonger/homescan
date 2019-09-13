@@ -137,6 +137,7 @@ mask=
     sudo service homescan stop
     cd /opt/homescan
     sudo git fetch
+    sudo git merge
     sudo service homescan start
     
 # Tools
