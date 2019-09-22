@@ -1,6 +1,6 @@
 ## HOMESCAN SETTINGS
 ## (c) Copyright Si Dunford, Aug 2019
-## Version 1.0.0
+## Version 1.1.0
 
 # UNTESTED ON WINDOWS AND MAC
 
@@ -99,22 +99,32 @@ class Settings():
         #self.expiration = self.getint( 'homescan', 'expiration', 300 )
         #self.deletion   = self.getint( 'homescan', 'deletion', 604800 )
         self.timeout    = self.getint( 'homescan', 'timeout', 3 )  # minutes
+        self.offline    = self.getint( 'homescan', 'offline', 4 )  # minutes
         self.reaper     = self.getint( 'homescan', 'reaper', 10080 )  # minutes (7 days)
+        
         self.topic      = self.get( 'homescan', 'topic', 'homescan/devices' )
         self.state      = self.get( 'homescan', 'state', 'homescan/state' )
         self.events     = self.get( 'homescan', 'events', 'homescan/events' )
-        self.offline    = self.get( 'homescan', 'offline_message', 'DOWN' )
-        self.online     = self.get( 'homescan', 'online_message', 'UP' )
-        
+                
         self.interface  = self.get( 'homescan', 'interface', 'eth1' )
         self.subnet     = self.get( 'homescan', 'subnet', '' )
         self.mask       = self.get( 'homescan', 'mask', '' )
         self.verbose    = self.getint( 'homescan', 'verbose', 0 ) 
+
+        self.added_msg   = self.get( 'messages', 'added', 'ADDED' )
+        self.offline_msg = self.get( 'messages', 'offline', 'DOWN' )
+        self.online_msg  = self.get( 'messages', 'online', 'UP' )
+        self.leave_msg   = self.get( 'messages', 'leave', 'LEAVE' )
+        self.sleep_msg = self.get( 'messages', 'sleep', 'SLEEP' )
+        self.updated_msg = self.get( 'messages', 'updated', 'UPDATED' )
+        self.wake_msg = self.get( 'messages', 'wake', 'WAKE' )
         
         # Fix-up's
         self.topic = self.topic.rstrip('/')
         self.state = self.state.rstrip('/') 
         self.events = self.events.rstrip('/') 
+        if self.offline <= self.timeout:
+            self.offline = min( self.timeout+7, 10 )
         
     def dump( self ):
         for attr in dir(self):
@@ -152,7 +162,7 @@ class Settings():
         self.config.set( section, key, value )
 
     def save( self ):
-        #print(".saving...")
+        print(".saving...")
         self.set( 'homescan', 'broker', self.broker )
         self.set( 'homescan', 'port', self.port )
         self.set( 'homescan', 'username', self.username )
@@ -161,13 +171,20 @@ class Settings():
         self.set( 'homescan', 'topic', self.topic )
         self.set( 'homescan', 'state', self.state )
         self.set( 'homescan', 'events', self.events )
-        self.set( 'homescan', 'offline_message', self.offline )
-        self.set( 'homescan', 'online_message', self.online )
+        
+        self.set( 'messages', 'added', self.added_msg )
+        self.set( 'messages', 'online', self.online_msg )
+        self.set( 'messages', 'offline', self.offline_msg )
+        self.set( 'messages', 'leave', self.leave_msg )
+        self.set( 'messages', 'sleep', self.sleep_msg )
+        self.set( 'messages', 'updated', self.update_msg )
+        self.set( 'messages', 'wake', self.wake_msg )
 
         #self.set( 'homescan', 'interval', self.interval )
         #self.set( 'homescan', 'expiration', self.expiration )
         #self.set( 'homescan', 'deletion', self.deletion )
         self.set( 'homescan', 'timeout', self.timeout )
+        self.set( 'homescan', 'offline', self.offline )
         self.set( 'homescan', 'reaper', self.reaper )
         
         self.set( 'homescan', 'interface', self.interface )

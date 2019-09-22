@@ -1,5 +1,38 @@
 HOMESCAN CHANGE LOG
 
+19 SEP 2019: VER: 1.1.0
+
+* EVENT CYCLE CHANGED TO THE FOLLOWING
+ 
+    ADDED      (When new device found)
+    SLEEP      (When Timeout occurs)
+    OFFLINE    (When Offline occurs)
+    ONLINE     (When device is online)
+    LEAVE      (When Reaper occurs)         
+    UPDATED    (When IP or Hostname changes)
+    WAKE       (When Online after sleep occurs)
+
+* Added section "[messages]" to settings
+    * Added [messages] "added=" to settings, default to "ADDED"
+    * Added [messages] "online=" to settings, default to "UP"
+    * Added [messages] "offline=" to settings, default to "DOWN"
+    * Added [messages] "leave=" to settings, default to "LEAVE"
+    * Added [messages] "sleep=" to settings, default to "SLEEP"
+    * Added [messages] "updated=" to settings, default to "UPDATED"
+    * Added [messages] "wake=" to settings, default to "WAKE"
+
+* Added [homescan] "offline=" to settings, default to 4 (in minutes)
+* Added string alignment support to row()
+* Added "gap='  '" parameter to row()
+* Updated RTT column to be right justified in homescan-devices.py
+
+* Added wol.py to lib
+* Added wakeonlan.py as a test tool
+* During the time between timeout (SLEEP event) and offline, the
+  script will send wake-on-lan packets in an attempt to wake up the
+  sleeping device. If this is successful a WAKE event is sent.
+* Updated README.md
+
 13 SEP 2019: VER: 1.0.7
 * Updated README.md
 * Fixed timeout count to >= instead of >

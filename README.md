@@ -1,5 +1,5 @@
 # Homescan
-An ARP Presence detection system for the Home that publishes on MQTT.
+An ARP-based UP/DOWN and Presence detection system for the Home that publishes on MQTT.
 By default, it will attempt to connect to an open MQTT broker on the local system; this can be changed by editing the configuration file.
 
 Join us on the Homescan channel on Discord at:
@@ -7,7 +7,7 @@ https://discord.gg/FhcKbr4
 
 Homescan publishes the following information to MQTT:
 * Homescan application state (UP/DOWN)
-* ARRIVE, DELETE, ONLINE, OFFLINE and CHANGE events
+* ADDED, ONLINE, SLEEP, WAKE, OFFLINE, UPDATED and LEAVE events
 * Device MAC/IP/Hostname/STATE and Round Trip Time
 
 # Project State
@@ -102,20 +102,20 @@ status=
     Default is homescan/status
 
 timeout=
-    How often (in minutes) the script should timeout a device as OFFLINE
+    Duration (in minutes) before the script should mark a device as SLEEP
+    During the time between timeout and offline, the script sends Wake-on-LAN
+    packets to attempt to wake up the device.
     Default: 3
+offline=
+    Duration (in minutes) before the script should mark a device as OFFLINE
+    NOTE: This time includes the timeout period and is not on top of it.
+    We recommend that this is set to 1 or 2 minutes longer than timout
+    Default: 5
 reaper=
-    How long (in minutes) before a device is deleted from the database
+    Duration (in minutes) before a device is deleted from the database
     (Time since device was last seen)
     When set to 0, the reaper will not function and records will never be deleted
     Default: 10080 (7 days)
-
-offline_message=
-    The message that is posted to STATUS topic when script is offline
-    Default: DOWN
-online_message=
-    The message that is posted to STATUS topic when script is online
-    Default: UP
 
 interface=
     REQUIRED
@@ -131,6 +131,34 @@ mask=
     The script will attempt to identify your address, but this can be used to override this behaviour
     The subnet mask of your network
     Default: 255.255.255.0
+    
+[messages]
+added=
+    The message posted to EVENT topic when new device discovered
+    default: ADDED
+offline=
+    The message posted to STATUS topic when script is offline
+    .OR.
+    The message posted to EVENT topic when device reaches offline duration.
+    Default: DOWN
+online=
+    The message posted to STATUS topic when script is online
+    .OR.
+    The message posted to EVENT topic when device is online.
+    Default: UP
+leave=
+    The message posted to EVENT topic when a device reaches reaper duration
+    Default: LEAVE
+sleep=
+    The message posted to EVENT topic when a device reaches timeout duration
+    Default: SLEEP
+updated=
+    The message posted to EVENT topic when a device IP or hostname changes
+    Default: UPDATED
+wake=
+    The message posted to EVENT topic when a device wakes after SLEEP
+    Default: WAKE
+        
     
 # Updating to latest version
 
@@ -150,6 +178,16 @@ This script can be used to view all devices published to the homescan/devices to
 
 ## homescan_status.py
 This script can be used to display the state of the homescan application as reported on MQTT topic homescan/homescan_status
+
+## wakeonlan.py
+Test script for wake on LAN. 
+Arguments:
+    $ wakeonlan <mac> [<ipv4>]
+    
+    mac:    Mac address in the format 00:00:00:00:00:00
+    ipv4:   Optional IP Address in the format 000.000.000.000
+    
+If mac adddress is provided without IP address and broadcast will be sent.
 
 # Errors:
 OSError: [Errno 19] No such device

@@ -1,6 +1,8 @@
+#!/usr/bin/python
+
 ## HOMESCAN: Network ARP Scan and Sniff
 ## (c) Copyright Si Dunford, Aug 2019
-VER='1.0.7'
+VER='1.1.0'
 
 # Imports
 from scapy.all import *
@@ -13,6 +15,7 @@ import logging
 from datetime import datetime
 from lib.settings import settings
 from lib.shared import *
+from lib.wol import wakeonlan
 
 # LOGGING
 log = logging.getLogger( "homescan" )
@@ -88,7 +91,7 @@ def arp_handler(packet):
     
 # MAC Address Sniffer Results
 def mac_found( mac, ip, hostname, rtt ):
-    show( "mac_found()" )
+    #show( "mac_found()" )
     # Check if in list
     if mac in devices:
         # MAC address is already known
@@ -96,18 +99,20 @@ def mac_found( mac, ip, hostname, rtt ):
         # Reset Timeout counter to zero
         device["counter"]=0
         device["rtt"]=rtt
-        #device["timeout"]=False
         # If device status up, re-publish it so that RTT is included
         if device['state']=="up":
             # Update MQTT
             mqtt_publish_device( device )
+            if device['sleep']==True:
+                mqtt_publish_event( settings.wake_msg, mac, ip, hostname ) 
         elif device['state']=="down":
+        #elif device['state']=="down" or device['state']=="timeout":
             # Set State to online
             device['state']="up"
             # Update MQTT
             mqtt_publish_device( device )
             # Send ONLINE event
-            mqtt_publish_event( "ONLINE", mac, ip, hostname )
+            mqtt_publish_event( settings.online_msg, mac, ip, hostname )          
         else:
             # State= unknown, or invalid
             # Set State to online
@@ -118,17 +123,18 @@ def mac_found( mac, ip, hostname, rtt ):
             #device['prestate']=='up'
             # Do not send an event
             
+        device['sleep']=False
         # Check for changes in IP adress and Hostname
         if not device["ip"]==ip:    # Device IP address has changed (Probably DHCP)
             # Send CHANGE event
-            mqtt_publish_event( "CHANGE", mac, ip, hostname, "Previously "+device["ip"] )
+            mqtt_publish_event( settings.updated_msg, mac, ip, hostname, "Previously "+device["ip"] )
             # Update device
             device["ip"]=ip
             # Update MQTT
             mqtt_publish_device( device )
         if not devices[mac]["hostname"]==hostname:  # Hostname changed!
             # Send CHANGE event
-            mqtt_publish_event( "CHANGE", mac, ip, hostname, "Previously "+device["hostname"] )
+            mqtt_publish_event( settings.updated_msg, mac, ip, hostname, "Previously "+device["hostname"] )
             # Update device
             device["hostname"]=hostname
             # Update MQTT
@@ -138,11 +144,12 @@ def mac_found( mac, ip, hostname, rtt ):
         device = {"mac":mac, "ip":ip, "hostname":hostname, "state":"up", "counter":0, "rtt":rtt }
         # Add to Device list
         devices[mac]= device
+        device['sleep']=False
         # Publish device into MQTT
         mqtt_publish_device( device )
-        # Raise an ARRIVE event
-        mqtt_publish_event( "ARRIVE", mac, ip, hostname )
-    show( "--> mac_found()" )
+        # Raise an ADDED event
+        mqtt_publish_event( settings.added_msg, mac, ip, hostname )
+    #show( "--> mac_found()" )
 
 # MQTT connection
 def mqtt_on_connect( client, userdata, flags, rc ):
@@ -160,7 +167,7 @@ def mqtt_on_connect( client, userdata, flags, rc ):
         client.subscribe(settings.topic+"/#")
         show( "Subscribed to '"+settings.topic+"/#'")
         # Set Application state to online
-        mqtt_publish_state( settings.online )
+        mqtt_publish_state( settings.online_msg )
     else:
         show( "MQTT connection failed: ["+str(rc)+"] "+mqtt_errstr(rc), MSG_ERROR )
     #show( "--> on_connect" )
@@ -186,12 +193,12 @@ def mqtt_on_message( client, userdata, msg ):
             # Get optional information
             device['hostname']=data["hostname"] if "hostname" in data else ""
             #device['prestate']=data["state"] if "state" in data else "unknown"
-            device['state']=data["state"] if "state" in data else "unknown"
+            device['state']=data["state"] if "state" in data else "down"
             #device['state']="unknown"
             # Other variables.
             device['counter']=0
             device['rtt']="-1"
-            #device["timeout"]=False
+            device['sleep']=False
             # Publish a "loaded" event for this device
             #mqtt_publish_event( "LOADED", device['mac'], device['ip'], device['hostname'] )
             devices[device['mac']]=device
@@ -219,13 +226,14 @@ def mqtt_publish_device( device ):
 # Publish an event
 # Added datetime in V1.0.6
 def mqtt_publish_event( event, mac, ip, hostname, info='' ):
-    show( "mqtt_publish_event()" )
+    #show( "mqtt_publish_event()" )
+    show( "--> "+event )
     now = datetime.now()
     when = now.strftime("%Y%m%d, %H:%M:%S")
     message = { "datetime":when, "event":event, "mac":mac, "ip":ip, "hostname":hostname, "info":info }
     msg = json.dumps( message, default=str )
     mqtt.publish( settings.events, msg, qos=0 )
-    show( "-->mqtt_publish_event()" )
+    #show( "-->mqtt_publish_event()" )
 
 # Publish application state
 # Datetime and Version added in V1.0.6
@@ -276,6 +284,7 @@ class HomeScan():
         self.sniffer.start()
         
         show( "Starting Scanner..." )
+        
         try:
             while Running:
                 # Loop through IP addresses (Ignoring Network and Broadcast Addresses)
@@ -296,30 +305,39 @@ class HomeScan():
                 for mac in list(devices.keys()):
                     #age = now - devices[mac]['last']
                     #print( mac, devices[mac]["hostname"], devices[mac]['state'], devices[mac]['counter'] ) 
-                    show( mac+", "+devices[mac]["hostname"]+", "+devices[mac]['state']+", "+str(devices[mac]['counter']) )
-                    # Do we REAP?
-                    if settings.reaper>0 and devices[mac]['counter']>=settings.reaper:
-                        show( "Reaping..." )
-                        # Publish DELETE event
-                        mqtt_publish_event( "DELETE", mac, ip, hostname )
-                        # Delete MQTT retained message
-                        mqtt.publish( settings.topic+"/"+mac, "", qos=0, retain=True )
-                        # Remove from device list
-                        devices.pop( mac )
-                    # Do we timeout?
-                    elif devices[mac]['counter']>=settings.timeout:
-                        #if "timeout" in devices[mac]: show( "No timeout key", MSG_ERROR )
-                        show( "Timeout..." )
-                        #print( mac + " down")
-                        #if devices[mac]["timeout"]==True: return
-                        # Update device
-                        #devices[mac]["timeout"]=True
-                        # Publish OFFLINE event
-                        if devices[mac]["state"]=="up":
-                            mqtt_publish_event( "OFFLINE", mac, devices[mac]['ip'], devices[mac]['hostname'] )
-                            devices[mac]['state']='down'
-                            # Update MQTT
-                            mqtt_publish_device( devices[mac] )
+                    #state = devices[mac]['state'] + "/" + "SLEEP" if devices[mac]['sleep']==True
+                    show( mac+", "+devices[mac]['state']+", "+str(devices[mac]['counter'])+",("+str(devices[mac]['sleep'])+"), "+devices[mac]["hostname"] )
+                    if devices[mac]["state"]=="up": 
+                        if devices[mac]['sleep']==True:
+                            if devices[mac]['counter']>=settings.offline:
+                                devices[mac]['state']='down'
+                                # Update MQTT
+                                mqtt_publish_event( settings.offline_msg, mac, devices[mac]['ip'], devices[mac]['hostname'] )
+                                mqtt_publish_device( devices[mac] )
+                            else:
+                                # Attempt to wake up device!
+                                show( "--> Sending Wake-On-LAN" )
+                                wakeonlan( mac, devices[mac]['ip'] )
+                        else:
+                            if devices[mac]['counter']>=settings.timeout:
+                                devices[mac]['sleep']=True
+                                # Update MQTT
+                                mqtt_publish_event( settings.sleep_msg, mac, devices[mac]['ip'], devices[mac]['hostname'] )
+                                #mqtt_publish_device( devices[mac] )
+                    elif devices[mac]["state"]=="down":
+                        if settings.reaper>0 and devices[mac]['counter']>=settings.reaper:
+                            #show( "--> Reaping..." )
+                            # Publish DELETE event
+                            mqtt_publish_event( settings.leave_msg, mac, ip, hostname )
+                            # Delete MQTT retained message
+                            mqtt.publish( settings.topic+"/"+mac, "", qos=0, retain=True )
+                            # Remove from device list
+                            devices.pop( mac )
+                    else:
+                        # Not sure how it would get here!
+                        # Unknown state, mark as down.
+                        devices[mac]['state']='down'
+                        
                     # Increse counter
                     devices[mac]['counter']+=1
                     
@@ -391,9 +409,15 @@ if __name__ == "__main__":
     mqtt.on_disconnect = mqtt_on_disconnect
     mqtt.on_message = mqtt_on_message
     
+    #print( "TIMEOUT: "+str(settings.timeout) )
+    #print( "OFFLINE: "+str(settings.offline) )
+    #print( "REAPER:  "+str(settings.reaper) )
+    # Application starting
+    #mqtt_publish_event( "STARTING", mac, devices[mac]['ip'], devices[mac]['hostname'] )
+    
     # Set Last Will and Testament
     show( "* Setting LWT" )
-    message = { "datetime":"", "state":settings.offline, "version":VER }
+    message = { "datetime":"", "state":settings.offline_msg, "version":VER }
     lwt = json.dumps( message, default=str )
     mqtt.will_set( settings.state, lwt, qos=1, retain=True )
     

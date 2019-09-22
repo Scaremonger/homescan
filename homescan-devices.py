@@ -1,6 +1,6 @@
 ## HOMESCAN TOOLS: device state
 ## (c) Copyright Si Dunford, Aug 2019
-## Version 1.0.0
+## Version 1.1.0
 
 # Imports
 import os,sys,traceback,platform,subprocess
@@ -15,7 +15,7 @@ from lib.shared import *
 devices = {}
 
 # Columns to display in debug results
-COLUMNS={ "mac":17, "ip":15, "state":6, "rtt":8, "hostname":17 }
+COLUMNS={ "mac":17, "ip":15, "state":8, "rtt":"8:R", "hostname":17 }
                
 # MQTT connection
 def mqtt_on_connect( client, userdata, flags, rc ):
@@ -43,12 +43,12 @@ def mqtt_on_message( client, userdata, msg ):
         device = json.loads( decoded )
         if "mac" in device:
             mac = device["mac"]
-            if not "rtt" in device: device['rtt']="-1"
+            if not "rtt" in device: device['rtt']='-1'
             if not "state" in device: device['state']="Unknown"
             # Decimal align RTT
             rtt = float(device['rtt'])
-            device['rtt']=f'{rtt:8.3f}'
-            #print( "# "+mac )
+            device['rtt']=f'{rtt:8.0f}'
+            #device['rtt']=int(device['rtt'])
             if not mac in devices:
                 devices[mac]=device
             else:
@@ -57,9 +57,9 @@ def mqtt_on_message( client, userdata, msg ):
         #    print( "Updating "+decoded )
             
     except Exception as e:
-        print( "** Something went wrong!" )
+        print( "** on_message() exception **" )
         print( str(e) )
-        #traceback.print_exc(file=sys.stdout)
+        traceback.print_exc(file=sys.stdout)
         
 # Launcher
 if __name__ == "__main__":

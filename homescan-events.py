@@ -11,7 +11,7 @@ from lib.settings import settings
 from lib.shared import *
 
 # Columns to display in debug results
-COLUMNS={ "event":7, "mac":17, "ip":15, "hostname":30, "info":30 }
+COLUMNS={ "event":8, "mac":17, "ip":15, "hostname":30, "info":30 }
                
 # MQTT connection
 def mqtt_on_connect( client, userdata, flags, rc ):
